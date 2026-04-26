@@ -1,0 +1,12 @@
+Seu evento foi publicado!
+
+O evento "<%= @evento.titulo %>" foi aprovado e está no ar.
+
+<% if @postagens.any? %>
+Links das postagens:
+<% @postagens.each do |p| %>
+- <%= p.plataforma.titleize %>: <%= p.url_externa %>
+<% end %>
+<% end %>
+
+Obrigado por divulgar com a gente.

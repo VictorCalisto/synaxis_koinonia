@@ -7,8 +7,9 @@
 # Ignore bundler config.
 /.bundle
 
-# Ignore all environment files.
+# Ignore all environment files (mas manter o .env.example versionado).
 /.env*
+!/.env.example
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -366,3 +367,5 @@ nohup.out
 *.tmp
 *.temp
 *.temporary
+/app/assets/builds/*
+!/app/assets/builds/.keep

@@ -1,0 +1,15 @@
+<h1>Recebemos seu evento!</h1>
+<p>Olá,</p>
+<p>
+  Seu evento <strong><%= @evento.titulo %></strong> foi enviado para análise.
+  Enquanto ele estiver pendente de aprovação, você pode editá-lo ou removê-lo
+  através do link abaixo:
+</p>
+<p>
+  <a href="<%= @url_edicao %>"><%= @url_edicao %></a>
+</p>
+<p>
+  O link expira em <%= l(@expira_em, format: :long) %> (ou quando um validador
+  aprovar/reprovar o evento).
+</p>
+<p>Obrigado por contribuir com o Synaxis Koinonia.</p>

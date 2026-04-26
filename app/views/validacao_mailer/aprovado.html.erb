@@ -1,0 +1,13 @@
+<h1>Seu evento foi publicado!</h1>
+<p>
+  O evento <strong><%= @evento.titulo %></strong> foi aprovado e está no ar.
+</p>
+<% if @postagens.any? %>
+  <p>Links das postagens:</p>
+  <ul>
+    <% @postagens.each do |p| %>
+      <li><%= p.plataforma.titleize %>: <a href="<%= p.url_externa %>"><%= p.url_externa %></a></li>
+    <% end %>
+  </ul>
+<% end %>
+<p>Obrigado por divulgar com a gente.</p>

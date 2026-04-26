@@ -1,0 +1,10 @@
+<h1>Sobre o evento que você enviou</h1>
+<p>Olá,</p>
+<p>
+  Após análise, seu evento <strong><%= @evento.titulo %></strong> não foi
+  aprovado para divulgação.
+</p>
+<blockquote>
+  <%= simple_format(@evento.motivo_rejeicao) %>
+</blockquote>
+<p>Você pode enviar um novo evento ajustado a qualquer momento.</p>

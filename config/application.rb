@@ -1,27 +1,38 @@
 require_relative "boot"
 
-require "rails/all"
+# Carrega railties explicitamente — Active Storage é omitido porque o app
+# persiste o banner diretamente em public/uploads/ (caminho relativo no DB).
+require "rails"
+require "active_model/railtie"
+require "active_job/railtie"
+require "active_record/railtie"
+require "action_controller/railtie"
+require "action_mailer/railtie"
+require "action_view/railtie"
+require "action_cable/engine"
+require "rails/test_unit/railtie"
 
-# Require the gems listed in Gemfile, including any gems
-# you've limited to :test, :development, or :production.
 Bundler.require(*Rails.groups)
 
 module SynaxisKoinonia
   class Application < Rails::Application
-    # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
 
-    # Please, add to the `ignore` list any other `lib` subdirectories that do
-    # not contain `.rb` files, or that should not be reloaded or eager loaded.
-    # Common ones are `templates`, `generators`, or `middleware`, for example.
     config.autoload_lib(ignore: %w[assets tasks])
 
-    # Configuration for the application, engines, and railties goes here.
-    #
-    # These settings can be overridden in specific environments using the files
-    # in config/environments, which are processed later.
-    #
-    # config.time_zone = "Central Time (US & Canada)"
-    # config.eager_load_paths << Rails.root.join("extras")
+    # Domínio em português brasileiro.
+    config.time_zone = "Brasilia"
+    config.i18n.default_locale = :"pt-BR"
+    config.i18n.available_locales = [:"pt-BR", :en]
+
+    # Preserva o schema PostgreSQL customizado (sch_synaxis_koinonia) nos dumps.
+    config.active_record.schema_format = :sql
+    # Dumpa apenas o schema sch_synaxis_koinonia (omite o "public" para não
+    # recriar um schema que o PostgreSQL já cria automaticamente).
+    config.active_record.dump_schemas = "sch_synaxis_koinonia"
+    # Mantém as tabelas internas do Rails dentro do nosso schema.
+    config.active_record.schema_migrations_table_name = "sch_synaxis_koinonia.schema_migrations"
+    config.active_record.internal_metadata_table_name = "sch_synaxis_koinonia.ar_internal_metadata"
+
   end
 end

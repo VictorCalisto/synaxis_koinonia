@@ -12,16 +12,18 @@ FileUtils.chdir APP_ROOT do
   # This script is idempotent, so that you can run it at any time and get an expectable outcome.
   # Add necessary setup steps to this file.
 
-  puts "== Installing dependencies =="
+  puts "== Instalando dependências =="
   system("bundle check") || system!("bundle install")
 
-  # puts "\n== Copying sample files =="
-  # unless File.exist?("config/database.yml")
-  #   FileUtils.cp "config/database.yml.sample", "config/database.yml"
-  # end
+  puts "\n== Copiando .env.example -> .env =="
+  unless File.exist?(".env")
+    FileUtils.cp ".env.example", ".env"
+    puts "   .env criado. Preencha as credenciais antes de continuar."
+  end
 
-  puts "\n== Preparing database =="
+  puts "\n== Preparando banco de dados (schema sch_synaxis_koinonia + migrações + seed) =="
   system! "bin/rails db:prepare"
+  system! "bin/rails db:seed"
   system! "bin/rails db:reset" if ARGV.include?("--reset")
 
   puts "\n== Removing old logs and tempfiles =="

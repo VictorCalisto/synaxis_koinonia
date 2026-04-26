@@ -1,0 +1,10 @@
+Recebemos seu evento!
+
+Seu evento "<%= @evento.titulo %>" foi enviado para análise. Enquanto ele
+estiver pendente, você pode editá-lo ou removê-lo através do link:
+
+<%= @url_edicao %>
+
+O link expira em <%= l(@expira_em, format: :long) %>.
+
+Obrigado por contribuir com o Synaxis Koinonia.

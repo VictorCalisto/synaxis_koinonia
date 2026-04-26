@@ -1,0 +1,12 @@
+---
+:concurrency: <%= ENV.fetch("SIDEKIQ_CONCURRENCY") { 5 } %>
+:queues:
+  - critico
+  - default
+  - mailers
+  - baixa
+:schedule:
+  expirar_tokens_edicao:
+    cron: "*/10 * * * *"
+    class: ExpirarTokensEdicaoJob
+    description: "Expira tokens de edição vencidos e limpa eventos pendentes"
