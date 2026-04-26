@@ -14,9 +14,11 @@ Rails.application.routes.draw do
   root "publico/eventos#index"
 
   scope module: "publico" do
-    resources :eventos, only: [:index, :show] do
-      member { get :calendario }
-    end
+    resources :eventos, only: [:index, :show]
+    get "eventos/:id/calendario.ics",
+        to: "eventos#calendario",
+        as: :calendario_evento,
+        constraints: { format: :ics }
   end
 
   # Submissão anônima

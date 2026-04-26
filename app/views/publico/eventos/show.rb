@@ -11,7 +11,7 @@ class Views::Publico::Eventos::Show < Views::Base
         render(Components::Eventos::Detalhe.new(
           evento: @evento,
           url_voltar: "/",
-          url_calendario: "/eventos/#{@evento.id}/calendario"
+          url_calendario: "/eventos/#{@evento.id}/calendario.ics"
         ))
       end
     end

@@ -20,10 +20,10 @@ jobs:
 
       - name: Scan for common Rails security vulnerabilities using static analysis
         run: bin/brakeman --no-pager
-      
+
       - name: Scan for known security vulnerabilities in gems used
         run: bin/bundler-audit
-      
+
   scan_js:
     runs-on: ubuntu-latest
 
@@ -68,15 +68,34 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    # services:
-    #  redis:
-    #    image: valkey/valkey:8
-    #    ports:
-    #      - 6379:6379
-    #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: synaxis
+          POSTGRES_PASSWORD: synaxis
+          POSTGRES_DB: synaxis_koinonia_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U synaxis"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
-      - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips
+      - name: Install system packages
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y imagemagick libvips postgresql-client
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -86,40 +105,29 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Run tests
+      - name: Prepare test database
         env:
           RAILS_ENV: test
-          # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-          # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test
+          DEFAULT_DATABASE_HOST: localhost
+          DEFAULT_DATABASE_NAME: synaxis_koinonia
+          DEFAULT_DATABASE_USERNAME: synaxis
+          DEFAULT_DATABASE_PASSWORD: synaxis
+          TEST_DATABASE_NAME: synaxis_koinonia_test
+          REDIS_URL: redis://localhost:6379/0
+          DISABLE_SOCIAL_PUBLISHING: "true"
+        run: bin/rails db:test:prepare
 
-  system-test:
-    runs-on: ubuntu-latest
-
-    # services:
-    #  redis:
-    #    image: valkey/valkey:8
-    #    ports:
-    #      - 6379:6379
-    #    options: --health-cmd "redis-cli ping" --health-interval 10s --health-timeout 5s --health-retries 5
-    steps:
-      - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y libvips
-
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
-      - name: Run System Tests
+      - name: Run RSpec
         env:
           RAILS_ENV: test
-          # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
-          # REDIS_URL: redis://localhost:6379/0
-        run: bin/rails db:test:prepare test:system
+          DEFAULT_DATABASE_HOST: localhost
+          DEFAULT_DATABASE_NAME: synaxis_koinonia
+          DEFAULT_DATABASE_USERNAME: synaxis
+          DEFAULT_DATABASE_PASSWORD: synaxis
+          TEST_DATABASE_NAME: synaxis_koinonia_test
+          REDIS_URL: redis://localhost:6379/0
+          DISABLE_SOCIAL_PUBLISHING: "true"
+        run: bundle exec rspec
 
       - name: Keep screenshots from failed system tests
         uses: actions/upload-artifact@v4

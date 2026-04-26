@@ -1,119 +1,103 @@
-# Name of your application. Used to uniquely configure containers.
+# Nome do app, usado para identificar containers.
 service: synaxis_koinonia
 
-# Name of the container image (use your-user/app-name on external registries).
+# Nome da imagem (use user/app em registries externos).
 image: synaxis_koinonia
 
-# Deploy to these servers.
+# Servidores de deploy. Web roda Puma, job roda Sidekiq.
 servers:
   web:
     - 192.168.0.1
-  # job:
-  #   hosts:
-  #     - 192.168.0.1
-  #   cmd: bin/jobs
+  job:
+    hosts:
+      - 192.168.0.1
+    cmd: bundle exec sidekiq -C config/sidekiq.yml
 
-# Enable SSL auto certification via Let's Encrypt and allow for multiple apps on a single web server.
-# If used with Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
-#
-# Using an SSL proxy like this requires turning on config.assume_ssl and config.force_ssl in production.rb!
-#
-# Don't use this when deploying to multiple web servers (then you have to terminate SSL at your load balancer).
-#
+# Proxy/SSL — habilitar quando o domínio estiver definido.
 # proxy:
 #   ssl: true
 #   host: app.example.com
 
-# Where you keep your container images.
+# Registry de imagens.
 registry:
-  # Alternatives: hub.docker.com / registry.digitalocean.com / ghcr.io / ...
   server: localhost:5555
-
-  # Needed for authenticated registries.
   # username: your-user
-
-  # Always use an access token rather than real password when possible.
   # password:
   #   - KAMAL_REGISTRY_PASSWORD
 
-# Inject ENV variables into containers (secrets come from .kamal/secrets).
+# ENV injetadas nos containers. Secrets ficam em .kamal/secrets.
 env:
   secret:
     - RAILS_MASTER_KEY
+    - SECRET_KEY_BASE
+    - DEFAULT_DATABASE_HOST
+    - DEFAULT_DATABASE_NAME
+    - DEFAULT_DATABASE_USERNAME
+    - DEFAULT_DATABASE_PASSWORD
+    - REDIS_URL
+    - SMTP_ADDRESS
+    - SMTP_PORT
+    - SMTP_USERNAME
+    - SMTP_PASSWORD
+    - SMTP_DOMAIN
+    - MAILER_FROM
+    - RECAPTCHA_SITE_KEY
+    - RECAPTCHA_SECRET_KEY
+    - INSTAGRAM_ACCESS_TOKEN
+    - INSTAGRAM_BUSINESS_ACCOUNT_ID
+    - FACEBOOK_PAGE_ID
+    - FACEBOOK_PAGE_ACCESS_TOKEN
+    - X_API_KEY
+    - X_API_SECRET
+    - X_BEARER_TOKEN
+    - X_ACCESS_TOKEN
+    - X_ACCESS_SECRET
   clear:
-    # Run the Solid Queue Supervisor inside the web server's Puma process to do jobs.
-    # When you start using multiple servers, you should split out job processing to a dedicated machine.
-    SOLID_QUEUE_IN_PUMA: true
-
-    # Set number of processes dedicated to Solid Queue (default: 1)
-    # JOB_CONCURRENCY: 3
-
-    # Set number of cores available to the application on each server (default: 1).
+    APP_HOST: https://synaxis.local
+    DISABLE_SOCIAL_PUBLISHING: "false"
+    RAILS_MAX_THREADS: 5
     # WEB_CONCURRENCY: 2
-
-    # Match this to any external database server to configure Active Record correctly
-    # Use synaxis_koinonia-db for a db accessory server on same machine via local kamal docker network.
-    # DB_HOST: 192.168.0.2
-
-    # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
 
-# Aliases are triggered with "bin/kamal <alias>". You can overwrite arguments on invocation:
-# "bin/kamal logs -r job" will tail logs from the first server in the job section.
+# Aliases para "bin/kamal <alias>".
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
   shell: app exec --interactive --reuse "bash"
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
 
-# Use a persistent storage volume for sqlite database files and local Active Storage files.
-# Recommended to change this to a mounted volume path that is backed up off server.
+# Volumes persistentes.
+# - storage: arquivos de Active Storage (não usado para banner, mas mantido para segurança).
+# - uploads: banners gravados em /rails/public/uploads — precisa persistir entre deploys.
 volumes:
   - "synaxis_koinonia_storage:/rails/storage"
+  - "synaxis_koinonia_uploads:/rails/public/uploads"
 
-# Bridge fingerprinted assets, like JS and CSS, between versions to avoid
-# hitting 404 on in-flight requests. Combines all files from new and old
-# version inside the asset_path.
+# Bridge entre assets versionados.
 asset_path: /rails/public/assets
 
-# Configure the image builder.
+# Configuração do builder.
 builder:
   arch: amd64
 
-  # # Build image via remote server (useful for faster amd64 builds on arm64 computers)
-  # remote: ssh://docker@docker-builder-server
-  #
-  # # Pass arguments and secrets to the Docker build process
-  # args:
-  #   RUBY_VERSION: ruby-4.0.3
-  # secrets:
-  #   - GITHUB_TOKEN
-  #   - RAILS_MASTER_KEY
+# Acessórios: PostgreSQL e Redis rodando como containers no mesmo host.
+accessories:
+  postgres:
+    image: postgres:16
+    host: 192.168.0.1
+    port: "127.0.0.1:5432:5432"
+    env:
+      clear:
+        POSTGRES_USER: synaxis
+        POSTGRES_DB: synaxis_koinonia_production
+      secret:
+        - POSTGRES_PASSWORD
+    directories:
+      - pgdata:/var/lib/postgresql/data
 
-# Use a different ssh user than root
-# ssh:
-#   user: app
-
-# Use accessory services (secrets come from .kamal/secrets).
-# accessories:
-#   db:
-#     image: mysql:8.0
-#     host: 192.168.0.2
-#     # Change to 3306 to expose port to the world instead of just local network.
-#     port: "127.0.0.1:3306:3306"
-#     env:
-#       clear:
-#         MYSQL_ROOT_HOST: '%'
-#       secret:
-#         - MYSQL_ROOT_PASSWORD
-#     files:
-#       - config/mysql/production.cnf:/etc/mysql/my.cnf
-#       - db/production.sql:/docker-entrypoint-initdb.d/setup.sql
-#     directories:
-#       - data:/var/lib/mysql
-#   redis:
-#     image: valkey/valkey:8
-#     host: 192.168.0.2
-#     port: 6379
-#     directories:
-#       - data:/data
+  redis:
+    image: redis:7
+    host: 192.168.0.1
+    port: "127.0.0.1:6379:6379"
+    directories:
+      - data:/data

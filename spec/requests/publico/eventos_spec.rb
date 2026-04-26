@@ -53,7 +53,7 @@ RSpec.describe "Público::Eventos", type: :request do
     let(:evento) { create(:evento, :aprovado, titulo: "Palestra") }
 
     it "retorna arquivo .ics" do
-      get "/eventos/#{evento.id}/calendario"
+      get "/eventos/#{evento.id}/calendario.ics"
       expect(response).to have_http_status(:ok)
       expect(response.content_type).to match(/text\/calendar/)
       expect(response.body).to include("BEGIN:VCALENDAR")

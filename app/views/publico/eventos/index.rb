@@ -29,7 +29,7 @@ class Views::Publico::Eventos::Index < Views::Base
               render(Components::Eventos::Cartao.new(
                 evento: evento,
                 url_detalhes: "/eventos/#{evento.id}",
-                url_calendario: "/eventos/#{evento.id}/calendario"
+                url_calendario: "/eventos/#{evento.id}/calendario.ics"
               ))
             end
           end
